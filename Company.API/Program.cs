@@ -11,6 +11,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseLazyLoadingProxies();
 });
 
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("MyPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 builder.Services.AddControllers().AddJsonOptions(config =>
 {
@@ -28,6 +37,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("MyPolicy");
 
 app.UseHttpsRedirection();
 
