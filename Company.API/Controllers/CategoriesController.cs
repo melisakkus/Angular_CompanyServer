@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using Company.API.Context;
 using Company.API.Entities;
 using Company.API.DTOs;
+using AutoMapper;
+using Company.API.Validators;
+using Company.API.DTOs.CategoryDtos;
+using Newtonsoft.Json.Linq;
 
 namespace Company.API.Controllers
 {
@@ -16,22 +20,30 @@ namespace Company.API.Controllers
     public class CategoriesController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
+        CategoryValidator validator = new CategoryValidator();
 
-        public CategoriesController(AppDbContext context)
+        public CategoriesController(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Categories
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        //public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+        //{
+        //    return await _context.Categories.ToListAsync();
+        //}
+        public async Task<ActionResult<IEnumerable<ResultCategoryDto>>> GetCategories()
         {
-            return await _context.Categories.ToListAsync();
+            var values =  await _context.Categories.ToListAsync();
+            return _mapper.Map<List<ResultCategoryDto>>(values);
         }
 
         // GET: api/Categories/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Category>> GetCategory(int id)
+        public async Task<ActionResult<ResultCategoryDto>> GetCategory(int id)
         {
             var category = await _context.Categories.FindAsync(id);
 
@@ -40,22 +52,33 @@ namespace Company.API.Controllers
                 return NotFound();
             }
 
-            return category;
+            return _mapper.Map<ResultCategoryDto>(category);
         }
 
         // PUT: api/Categories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(int id, CategoryDto categoryDto)
+        public async Task<IActionResult> PutCategory(int id, UpdateCategoryDto categoryDto)
         {
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
-            {
-                return NotFound();
-            }
-            category.CategoryName = categoryDto.CategoryName;
+            //var category = await _context.Categories.FindAsync(id);
+            //if (category == null)
+            //{
+            //    return NotFound();
+            //}
 
-            _context.Entry(category).State = EntityState.Modified;
+            var mappedCategory = _mapper.Map<Category>(categoryDto);
+            var result = await validator.ValidateAsync(mappedCategory);
+            if (!result.IsValid)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    return BadRequest(result.Errors);
+                }
+            }
+            _context.Update(mappedCategory);
+
+            //_context.Entry(mappedCategory).State = EntityState.Modified;
 
             try
             {
@@ -79,14 +102,19 @@ namespace Company.API.Controllers
         // POST: api/Categories
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Category>> PostCategory(CategoryDto categoryDto)
+        public async Task<ActionResult<CreateCategoryDto>> PostCategory(CreateCategoryDto categoryDto)
         {
-            var category = new Category
+            var category = _mapper.Map<Category>(categoryDto);
+            var result = await validator.ValidateAsync(category);
+            if (!result.IsValid)
             {
-                CategoryName = categoryDto.CategoryName
-            };
-
-            _context.Categories.Add(category);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    return BadRequest(result.Errors);
+                }
+            }
+            await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetCategory", new { id = category.Id }, category);

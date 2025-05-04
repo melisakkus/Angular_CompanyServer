@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 using Company.API.Context;
 using Company.API.Entities;
 using Company.API.DTOs;
+using AutoMapper;
+using Company.API.Validators;
+using Company.API.DTOs.ProductDtos;
+using FluentValidation;
 
 namespace Company.API.Controllers
 {
@@ -16,22 +20,26 @@ namespace Company.API.Controllers
     public class ProductsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IMapper _mapper;
+        ProductValidator validator = new ProductValidator();
 
-        public ProductsController(AppDbContext context)
+        public ProductsController(AppDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Products
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ResultProductDto>>> GetProducts()
         {
-            return await _context.Products.ToListAsync();
+            var values =  await _context.Products.ToListAsync();
+            return _mapper.Map<List<ResultProductDto>>(values);
         }
 
         // GET: api/Products/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id)
+        public async Task<ActionResult<ResultProductDto>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
 
@@ -40,34 +48,27 @@ namespace Company.API.Controllers
                 return NotFound();
             }
 
-            return product;
+            return _mapper.Map<ResultProductDto>(product);
+
         }
 
         // PUT: api/Products/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutProduct(int id, ProductDto productDto)
+        public async Task<IActionResult> PutProduct(int id, UpdateProductDto productDto)
         {
-
-            if (!ModelState.IsValid)
+            var mappedProduct = _mapper.Map<Product>(productDto);
+            var result = await validator.ValidateAsync(mappedProduct);
+            if (!result.IsValid)
             {
-                return BadRequest(ModelState);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    return BadRequest(result.Errors);
+                }
             }
-
-            var product = await _context.Products.FindAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            product.ProductName = productDto.ProductName;
-            product.ImageUrl = productDto.ImageUrl;
-            product.Description = productDto.Description;
-            product.CategoryId = productDto.CategoryId;
-
-            _context.Entry(product).State = EntityState.Modified;
-            //_context.Update(product); ile aynı işlem
-
+            _context.Update(mappedProduct);
+            //_context.Entry(product).State = EntityState.Modified;
             try
             {
                 await _context.SaveChangesAsync();
@@ -90,22 +91,19 @@ namespace Company.API.Controllers
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Product>> PostProduct(ProductDto productDto)
+        public async Task<ActionResult<CreateProductDto>> PostProduct(CreateProductDto productDto)
         {
-
-            if (!ModelState.IsValid) 
+            var product = _mapper.Map<Product>(productDto);
+            var result = await validator.ValidateAsync(product);
+            if (!result.IsValid)
             {
-                return BadRequest(ModelState);
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    return BadRequest(result.Errors);
+                }
             }
-
-            var product = new Product()
-            {
-                ProductName = productDto.ProductName,
-                ImageUrl = productDto.ImageUrl,
-                Description = productDto.Description,
-                CategoryId = productDto.CategoryId
-            };
-            _context.Products.Add(product);
+            await _context.Products.AddAsync(product);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction("GetProduct", new { id = product.Id }, product);
