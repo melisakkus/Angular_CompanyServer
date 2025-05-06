@@ -16,7 +16,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        AboutValidator validator = new AboutValidator();
 
         public AboutsController(AppDbContext context,IMapper mapper)
         {
@@ -31,6 +30,15 @@ namespace Company.API.Controllers
             var mappingValues = _mapper.Map <List<ResultAboutDto>>(values);
             return Ok(mappingValues);
         }
+
+        [HttpGet("Last")]
+        public async Task<IActionResult> GetLastAbout()
+        {
+            var value = _context.Abouts.OrderByDescending(x=>x.AboutId).FirstOrDefault();
+            var mappingValues = _mapper.Map<ResultAboutDto>(value);
+            return Ok(mappingValues);
+        }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
@@ -62,27 +70,19 @@ namespace Company.API.Controllers
                 return BadRequest(ModelState);
             }
             var about = _mapper.Map<About>(model);
-            await _context.Abouts.AddAsync(about);
+            _context.Abouts.Add(about);
             await _context.SaveChangesAsync();
-            //return Ok(about);
-
-            return CreatedAtAction("GetProduct", new { id = about.AboutId }, about);
-
+            return Ok(about);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateAboutDto aboutDto)
         {
-            var mappingAbout = _mapper.Map<About>(aboutDto);
-            var result = await validator.ValidateAsync(mappingAbout);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var mappingAbout = _mapper.Map<About>(aboutDto);
             _context.Abouts.Update(mappingAbout);
             await _context.SaveChangesAsync();
             return NoContent();
