@@ -62,7 +62,7 @@ namespace Company.API.Controllers
             return Ok(banner);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateBannerDto model)
         {
             var mappingBanner = _mapper.Map<Banner>(model);

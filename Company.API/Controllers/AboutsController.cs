@@ -47,19 +47,27 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateAboutDto model)
         {
-            var about = _mapper.Map<About>(model);
-            var result = await validator.ValidateAsync(about);
-            if (!result.IsValid)
+            //var result = await validator.ValidateAsync(about);
+            //if (!result.IsValid)
+            //{
+            //    foreach (var error in result.Errors)
+            //    {
+            //        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            //        return BadRequest(result.Errors);
+            //    }
+            //}
+
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var about = _mapper.Map<About>(model);
             await _context.Abouts.AddAsync(about);
             await _context.SaveChangesAsync();
-            return Ok(about);
+            //return Ok(about);
+
+            return CreatedAtAction("GetProduct", new { id = about.AboutId }, about);
+
         }
 
         [HttpPut("{id}")]

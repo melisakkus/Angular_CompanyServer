@@ -21,7 +21,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        ProductValidator validator = new ProductValidator();
 
         public ProductsController(AppDbContext context, IMapper mapper)
         {
@@ -34,7 +33,7 @@ namespace Company.API.Controllers
         public async Task<ActionResult<IEnumerable<ResultProductDto>>> GetProducts()
         {
             var values =  await _context.Products.ToListAsync();
-            return _mapper.Map<List<ResultProductDto>>(values);
+            return Ok(_mapper.Map<List<ResultProductDto>>(values));
         }
 
         // GET: api/Products/5
@@ -42,13 +41,11 @@ namespace Company.API.Controllers
         public async Task<ActionResult<ResultProductDto>> GetProduct(int id)
         {
             var product = await _context.Products.FindAsync(id);
-
             if (product == null)
             {
                 return NotFound();
             }
-
-            return _mapper.Map<ResultProductDto>(product);
+            return Ok(_mapper.Map<ResultProductDto>(product));
 
         }
 
@@ -58,14 +55,19 @@ namespace Company.API.Controllers
         public async Task<IActionResult> PutProduct(int id, UpdateProductDto productDto)
         {
             var mappedProduct = _mapper.Map<Product>(productDto);
-            var result = await validator.ValidateAsync(mappedProduct);
-            if (!result.IsValid)
+            //var result = await validator.ValidateAsync(mappedProduct);
+            //if (!result.IsValid)
+            //{
+            //    foreach (var error in result.Errors)
+            //    {
+            //        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            //        return BadRequest(result.Errors);
+            //    }
+            //}
+
+            if(!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
             _context.Update(mappedProduct);
             //_context.Entry(product).State = EntityState.Modified;
@@ -91,23 +93,18 @@ namespace Company.API.Controllers
         // POST: api/Products
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<CreateProductDto>> PostProduct(CreateProductDto productDto)
+        public async Task<ActionResult<Product>> PostProduct(CreateProductDto productDto)
         {
-            var product = _mapper.Map<Product>(productDto);
-            var result = await validator.ValidateAsync(product);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
-            await _context.Products.AddAsync(product);
+            var product = _mapper.Map<Product>(productDto);
+            _context.Products.Add(product);
             await _context.SaveChangesAsync();
-
             return CreatedAtAction("GetProduct", new { id = product.Id }, product);
         }
+
 
         // DELETE: api/Products/5
         [HttpDelete("{id}")]
