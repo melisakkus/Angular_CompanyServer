@@ -17,7 +17,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        BannerValidator validator = new BannerValidator();
         public BannersController(AppDbContext context, IMapper mapper)
         {
             _context = context;
@@ -47,16 +46,11 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateBannerDto model)
         {
-            var banner = _mapper.Map<Banner>(model);
-            var result = await validator.ValidateAsync(banner);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var banner = _mapper.Map<Banner>(model);
             await _context.Banners.AddAsync(banner);
             await _context.SaveChangesAsync();
             return Ok(banner);
@@ -65,16 +59,11 @@ namespace Company.API.Controllers
         [HttpPut]
         public async Task<IActionResult> Update(UpdateBannerDto model)
         {
-            var mappingBanner = _mapper.Map<Banner>(model);
-            var result = await validator.ValidateAsync(mappingBanner);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var mappingBanner = _mapper.Map<Banner>(model);
             _context.Banners.Update(mappingBanner);
             await _context.SaveChangesAsync();
             return NoContent();

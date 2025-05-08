@@ -21,7 +21,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        CategoryValidator validator = new CategoryValidator();
 
         public CategoriesController(AppDbContext context, IMapper mapper)
         {
@@ -66,16 +65,11 @@ namespace Company.API.Controllers
             //    return NotFound();
             //}
 
-            var mappedCategory = _mapper.Map<Category>(categoryDto);
-            var result = await validator.ValidateAsync(mappedCategory);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var mappedCategory = _mapper.Map<Category>(categoryDto);
             _context.Update(mappedCategory);
 
             //_context.Entry(mappedCategory).State = EntityState.Modified;
@@ -104,16 +98,11 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<ActionResult<CreateCategoryDto>> PostCategory(CreateCategoryDto categoryDto)
         {
-            var category = _mapper.Map<Category>(categoryDto);
-            var result = await validator.ValidateAsync(category);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var category = _mapper.Map<Category>(categoryDto);
             await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
 

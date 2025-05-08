@@ -16,7 +16,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        SocialMediaValidator validator = new SocialMediaValidator();
 
         public SocialMediasController(AppDbContext context, IMapper mapper)
         {
@@ -47,34 +46,24 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateSocialMediaDto model)
         {
-            var value = _mapper.Map<SocialMedia>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if(!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<SocialMedia>(model);
             await _context.SocialMedias.AddAsync(value);
             await _context.SaveChangesAsync();
             return Ok(value);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateSocialMediaDto model)
         {
-            var value = _mapper.Map<SocialMedia>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<SocialMedia>(model);
             _context.SocialMedias.Update(value);
             await _context.SaveChangesAsync();
             return NoContent();

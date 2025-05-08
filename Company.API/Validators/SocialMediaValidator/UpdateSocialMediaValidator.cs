@@ -1,16 +1,15 @@
-﻿using Company.API.Entities;
+﻿using Company.API.DTOs.SocialMediaDtos;
 using FluentValidation;
 
-namespace Company.API.Validators
+namespace Company.API.Validators.SocialMediaValidator
 {
-    public class SocialMediaValidator : AbstractValidator<SocialMedia>
+    public class UpdateSocialMediaValidator : AbstractValidator<UpdateSocialMediaDto>
     {
-        public SocialMediaValidator()
+        public UpdateSocialMediaValidator()
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("Sosyal medya adı boş bırakılamaz.").MaximumLength(50);
             RuleFor(x => x.Url).NotEmpty().WithMessage("Sosyal medya linki boş bırakılamaz.");
             RuleFor(x => x.Icon).NotEmpty().WithMessage("Ikon boş bırakılamaz.");
         }
-    }
-
+    }    
 }

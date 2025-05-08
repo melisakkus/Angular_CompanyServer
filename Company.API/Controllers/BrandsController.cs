@@ -17,7 +17,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        BrandValidator validator = new BrandValidator();
         public BrandsController(AppDbContext context, IMapper mapper)
         {
             _context = context;
@@ -47,34 +46,24 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateBrandDto model)
         {
-            var brand = _mapper.Map<Brand>(model);
-            var result = await validator.ValidateAsync(brand);
-            if (!result.IsValid)
+            if(!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var brand = _mapper.Map<Brand>(model);
             await _context.Brands.AddAsync(brand);
             await _context.SaveChangesAsync();
             return Ok(brand);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateBrandDto model)
         {
-            var mappingBrand = _mapper.Map<Brand>(model);
-            var result = await validator.ValidateAsync(mappingBrand);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var mappingBrand = _mapper.Map<Brand>(model);
             _context.Brands.Update(mappingBrand);
             await _context.SaveChangesAsync();
             return NoContent();

@@ -16,7 +16,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        SubsrcibeUserValidator validator = new SubsrcibeUserValidator();
 
         public SubscribeUsersController(AppDbContext context, IMapper mapper)
         {
@@ -47,34 +46,24 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateSubscribeUserDto model)
         {
-            var value = _mapper.Map<SubscribeUser>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<SubscribeUser>(model);
             await _context.SubscribeUsers.AddAsync(value);
             await _context.SaveChangesAsync();
             return Ok(value);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateSubscribeUserDto model)
         {
-            var value = _mapper.Map<SubscribeUser>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<SubscribeUser>(model);
             _context.SubscribeUsers.Update(value);
             await _context.SaveChangesAsync();
             return NoContent();

@@ -16,8 +16,6 @@ namespace Company.API.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IMapper _mapper;
-        ServiceValidator validator = new ServiceValidator();
-
         public ServicesController(AppDbContext context, IMapper mapper)
         {
             _context = context;
@@ -47,34 +45,24 @@ namespace Company.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateServiceDto model)
         {
-            var value = _mapper.Map<Service>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if(!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<Service>(model);
             await _context.Services.AddAsync(value);
             await _context.SaveChangesAsync();
             return Ok(value);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> Update(UpdateServiceDto model)
         {
-            var value = _mapper.Map<Service>(model);
-            var result = await validator.ValidateAsync(value);
-            if (!result.IsValid)
+            if (!ModelState.IsValid)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-                    return BadRequest(result.Errors);
-                }
+                return BadRequest(ModelState);
             }
+            var value = _mapper.Map<Service>(model);
             _context.Services.Update(value);
             await _context.SaveChangesAsync();
             return NoContent();

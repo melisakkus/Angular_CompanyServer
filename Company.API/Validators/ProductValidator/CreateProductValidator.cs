@@ -10,7 +10,7 @@ namespace Company.API.Validators.ProductValidator
         {
             RuleFor(x => x.ProductName).NotEmpty().WithMessage("Ürün adı boş bırakılamaz.")
                                        .MinimumLength(3).WithMessage("Ürün adı en az 3 karakter olmalıdır.")
-                                       .MaximumLength(30).WithMessage("Ürün adı en fazla 30 karakter olmalıdır.");
+                                       .MaximumLength(100).WithMessage("Ürün adı en fazla 100 karakter olmalıdır.");
 
             RuleFor(x => x.ImageUrl).NotEmpty().WithMessage("Ürün görsel url boş bırakılamaz");
             RuleFor(x => x.Description).NotEmpty().WithMessage("Ürün açıklaması boş bırakılamaz");
