@@ -1,6 +1,9 @@
-# Angular Company Server
+# .NET Core & Angular ile Web Uygulaması: Angular_Company
 
 Angular ön yüzü ve .NET Core arka ucu ile geliştirilmiş bu proje, kullanıcı etkileşimleri için Angular'da iki modül (main, admin) sunarken, .NET Core API katmanıyla veri alışverişini yönetir ve Entity Framework Core ile veritabanı işlemlerini gerçekleştirir.
+
+Angular tarafı için : https://github.com/melisakkus/myAcademyAngularProject 
+
 ## 🚀 Proje Özellikleri
 
 - ASP.NET Core 8 Web API kullanılarak geliştirilmiştir.  
